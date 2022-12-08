@@ -99,7 +99,7 @@ fn compute_total_size(file_size: HashMap<String, i32>, children: HashMap<String,
                     total += total_file_size.get(&(node.clone() + "/" + child)).unwrap();
                 }
             }
-            let mut curr_size = total_file_size.get(&node).unwrap();
+            let curr_size = total_file_size.get(&node).unwrap();
             total_file_size.insert(node, curr_size + total);
         } else {
             stack.push(node.clone());
