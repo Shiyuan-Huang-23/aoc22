@@ -111,7 +111,6 @@ fn calc_scenic_score(grid: Vec<Vec<i32>>, r: usize, c: usize) -> i32 {
 
 fn parse_grid() -> Vec<Vec<i32>> {
     let reader = util::get_day_reader(8);
-    // let reader = util::get_file_reader("short.txt");
     let mut grid: Vec<Vec<i32>> = Vec::new();
     let offset = '0' as i32;
     for line in reader.lines() {
