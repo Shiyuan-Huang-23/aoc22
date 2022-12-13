@@ -49,13 +49,13 @@ fn monkey_helper(num_rounds: i32, reduce_worry: bool) {
     // simulate rounds
     for _ in 0..num_rounds {
         for i in 0..monkey_items.len() {
-            let mut items = monkey_items[i].clone();
+            let items = monkey_items[i].clone();
             let op = ops[i].clone();
             let modulus = moduli[i];
             let (t, f) = toss_targets[i];
             for item in items {
                 num_items_inspected[i] += 1;
-                let mut operand1 = item;
+                let operand1 = item;
                 let mut operand2 = item;
                 if op[2] != "old" {
                     operand2 = op[2].parse().unwrap();
