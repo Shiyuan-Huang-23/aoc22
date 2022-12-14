@@ -13,4 +13,5 @@ fn main() {
     days::day10::main();
     days::day11::main();
     days::day12::main();
+    days::day13::main();
 }
