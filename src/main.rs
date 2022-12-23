@@ -25,4 +25,5 @@ fn main() {
     days::day18::main();
     days::day19::main();
     days::day20::main();
+    days::day22::main();
 }
