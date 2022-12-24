@@ -18,13 +18,13 @@ fn main() {
         days::day13::main();
         days::day14::main();
         days::day15::main();
+        days::day20::main();
         days::day21::main();
         days::day22::main();
+        days::day23::main();
     }
     days::day16::main();
     days::day17::main();
     days::day18::main();
     days::day19::main();
-    days::day20::main();
-    days::day23::main();
 }
