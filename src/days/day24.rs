@@ -3,10 +3,11 @@ use std::io::BufRead;
 use crate::days::util;
 
 pub fn main() {
-    part1();
+    solve(false);
+    solve(true);
 }
 
-fn part1() {
+fn solve(get_snacks: bool) {
     let reader = util::get_day_reader(24);
     let mut start = (-1, -1);
     let mut end = (-1, -1);
@@ -36,14 +37,19 @@ fn part1() {
         }
     }
 
-    // explore all possible valid positions that can be occupied at each time step
     let num_rows = lines.len() as i32;
     let num_cols = lines[0].len() as i32;
+    // valid positions that can be occupied at each time step
     let mut positions: HashSet<(i32, i32)> = HashSet::new();
     positions.insert(start);
+    // valid moves from each tile
     let moves: Vec<(i32, i32)> = vec![(-1, 0), (1, 0), (0, -1), (0, 1), (0, 0)];
     let mut num_minutes = 0;
     let mut end_reached = false;
+    // how many trips across the valley have been made
+    let mut num_crossings = 0;
+
+    // explore all possible valid positions that can be occupied at each time step
     while !end_reached {
         // update blizzard positions
         let mut temp_blizzards = HashMap::new();
@@ -73,23 +79,43 @@ fn part1() {
 
         num_minutes += 1;
         let mut temp_positions = HashSet::new();
+        // whether to start another trip across the valley
+        let mut reset = false;
         // explore valid positions based on currently-occupied positions
         for (r, c) in &positions {
             for (dr, dc) in &moves {
                 let cand = (*r + *dr, *c + *dc);
-                if !rocks.contains(&cand) && !blizzards.contains_key(&cand) && cand.0 >= 0 {
+                if !rocks.contains(&cand) && !blizzards.contains_key(&cand) && cand.0 >= 0 && cand.0 < num_rows {
                     temp_positions.insert(cand);
                 }
+                // we've crossed the valley
                 if cand == end {
-                    end_reached = true;
-                    break;
+                    if !get_snacks {
+                        end_reached = true;
+                        break;
+                    } else if num_crossings < 2 {
+                        num_crossings += 1;
+                        reset = true;
+                    } else {
+                        end_reached = true;
+                        break;
+                    }
                 }
             }
             if end_reached {
                 break;
             }
         }
-        positions = temp_positions;
+        if reset {
+            // start trip across valley in other direction
+            let temp = end;
+            end = start;
+            start = temp;
+            positions.clear();
+            positions.insert(start);
+        } else {
+            positions = temp_positions;
+        }
     }
     println!("Number of minutes needed to reach goal: {}", num_minutes);
 }
