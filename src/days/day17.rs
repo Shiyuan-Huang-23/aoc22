@@ -32,7 +32,6 @@ fn solve(num_rocks: i64) {
     let mut max_height = 0;
     let mut jet_index = 0;
     let mut piece_index = 0;
-    let mut heights: Vec<i64> = vec![0, 0, 0, 0, 0, 0, 0];
 
     // variables for finding cycles
     let mut cycle_found = false;
@@ -84,7 +83,6 @@ fn solve(num_rocks: i64) {
         for i in 0..piece_pos.len() {
             rock_pos.insert(piece_pos[i]);
             max_height = max(max_height, piece_pos[i].0);
-            heights[piece_pos[i].1 as usize] = piece_pos[i].0;
             // find two layers of stopped rocks that future rocks cannot fall below
             // layer patterns like ___---- or -_-__-- are allowed
             let mut full_layer = true;

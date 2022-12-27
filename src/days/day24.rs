@@ -70,7 +70,7 @@ fn solve(get_snacks: bool) {
                 if !temp_blizzards.contains_key(&cand) {
                     temp_blizzards.insert(cand, vec![*dir]);
                 } else {
-                    let mut temp_v = temp_blizzards.get_mut(&cand).unwrap();
+                    let temp_v = temp_blizzards.get_mut(&cand).unwrap();
                     temp_v.push(*dir);
                 }
             }
