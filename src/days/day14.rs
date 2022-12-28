@@ -93,7 +93,6 @@ fn part2() {
 
 // returns map of rock structures in cave, and lowest rock structure (rock with highest y coord)
 fn parse_cave() -> (HashMap<(i32, i32), char>, i32) {
-    // let reader = util::get_file_reader("short.txt");
     let reader = util::get_day_reader(14);
     let mut cave: HashMap<(i32, i32), char> = HashMap::new();
     let mut lowest_rock = 0;
