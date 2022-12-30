@@ -15,7 +15,7 @@ struct ValveInfo {
     // valve -> flow rate, where flow rate > 0
     flow_rate: HashMap<String, u32>,
     // valves with non-zero flow
-    valves: Vec<String>
+    valves: Vec<String>,
 }
 
 #[derive(Debug)]
@@ -31,7 +31,7 @@ struct SimulationState {
     // pressure that has already been released before reaching current valve
     pressure: u32,
     // number of minutes that have passed
-    time: u32
+    time: u32,
 }
 
 fn part1() {
@@ -41,11 +41,36 @@ fn part1() {
 
 fn part2() {
     let mut max_pressure_released: u32 = 0;
+    let end_time = 26;
     match parse_input() {
         ValveInfo { graph, flow_rate, valves } => {
-            // solve
+            // explore every possible distinct assignment of valves to human and elephant
+            // don't duplicate assignments that are equivalent by symmetry
+            let mut assignment_bits = 1;
+            let stop: i32 = (2 as i32).pow((valves.len() - 1) as u32);
+            let width = valves.len();
+            while assignment_bits < stop {
+                let assignment = format!("{:0width$b}", assignment_bits);
+                let mut human_valves: Vec<String> = Vec::new();
+                let mut elephant_valves: Vec<String> = Vec::new();
+                for (i, c) in assignment.chars().enumerate() {
+                    let v = valves[i].clone();
+                    if c == '0' {
+                        human_valves.push(v);
+                    } else {
+                        elephant_valves.push(v);
+                    }
+                }
+                let human_valve_info = ValveInfo { graph: graph.clone(), flow_rate: flow_rate.clone(), valves: human_valves };
+                let human_pressure_released = solve(human_valve_info, end_time);
+                let elephant_valve_info = ValveInfo { graph: graph.clone(), flow_rate: flow_rate.clone(), valves: elephant_valves };
+                let elephant_pressure_released = solve(elephant_valve_info, end_time);
+                max_pressure_released = max(max_pressure_released, human_pressure_released + elephant_pressure_released);
+                assignment_bits += 1;
+            }
         }
     }
+    println!("Maximum pressure released: {}", max_pressure_released);
 }
 
 fn parse_input() -> ValveInfo {
@@ -74,14 +99,14 @@ fn parse_input() -> ValveInfo {
     return ValveInfo {
         graph,
         flow_rate,
-        valves
-    }
+        valves,
+    };
 }
 
 fn solve(valve_info: ValveInfo, end_time: u32) -> u32 {
     let mut max_pressure_released: u32 = 0;
     match valve_info {
-        ValveInfo{ graph, flow_rate, valves} => {
+        ValveInfo { graph, flow_rate, valves } => {
             // valves, along with the start valve
             let mut valves_with_start = valves.clone();
             valves_with_start.insert(0, "AA".to_string());
