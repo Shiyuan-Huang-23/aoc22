@@ -21,7 +21,6 @@ struct SimulationState {
 }
 
 fn part1() {
-    // let reader = util::get_day_reader(19);
     let reader = util::get_file_reader("short19.txt");
     let mut quality_sum = 0;
     for (i, line) in reader.lines().enumerate() {
@@ -54,61 +53,61 @@ fn mine_geodes(costs: [[u32; 3]; 4]) -> u32 {
     while !stack.is_empty() {
         match stack.pop().unwrap() {
             SimulationState { resources, robots, time, geode_robots, geodes_mined } => {
-                // whether we have already waited to gather more resources
-                let mut have_waited = false;
                 // try to build each type of robot
                 for i in 0..costs.len() {
                     let cost = costs[i];
                     // check we have enough resources to build the robot
-                    let mut can_build = true;
+                    // figure out how long we need to wait to gather resources to build the bot
+                    // if we don't have enough resources
+                    let mut max_wait_time = 0;
                     for j in 0..resources.len() {
                         if resources[j] < cost[j] {
-                            can_build = false;
-                            break;
+                            if robots[j] > 0 {
+                                // cost[j] - resources[j] is how much more of a resource we need
+                                // + 1 accounts for the fact that we'll need to wait to gather resources during this minute as well
+                                max_wait_time = max(max_wait_time, (cost[j] - resources[j])/robots[j] + 1);
+                            } else {
+                                // we currently have no robots gathering this resource
+                                // infeasible to build this robot
+                                max_wait_time = end_time;
+                            }
                         }
+                    }
+                    // won't be able to build robot in time
+                    if time + max_wait_time >= end_time {
+                        continue;
                     }
                     let mut new_resources = resources;
-                    if can_build {
-                        // spend resources to build robot
-                        for j in 0..resources.len() {
-                            new_resources[j] -= cost[j];
-                        }
-                    }
-                    // gather resources
+                    // gather resources with existing robots
                     for j in 0..resources.len() {
-                        new_resources[j] += robots[j];
+                        // the +1 is because we're simulating until the end of the minute in which
+                        // the chosen robot is built
+                        new_resources[j] += robots[j] * (max_wait_time + 1);
                     }
                     let mut new_robots = robots;
                     let mut new_geode_robots = geode_robots;
-                    if can_build {
-                        // robot is built
-                        if i < robots.len() {
-                            new_robots[i] += 1;
-                        } else {
-                            new_geode_robots += 1;
-                        }
+                    // spend resources to build robot
+                    for j in 0..resources.len() {
+                        new_resources[j] -= cost[j];
                     }
-                    // check whether we're out of time
-                    if time + 1 == end_time {
-                        max_geodes_mined = max(max_geodes_mined, geodes_mined + geode_robots);
-                        println!("Leaf reached");
-                        continue;
+                    // robot is built
+                    if i < robots.len() {
+                        new_robots[i] += 1;
+                    } else {
+                        new_geode_robots += 1;
                     }
-                    if can_build || !have_waited {
-                        // add state to stack
-                        stack.push(SimulationState {
-                            resources: new_resources,
-                            robots: new_robots,
-                            time: time + 1,
-                            geode_robots: new_geode_robots,
-                            geodes_mined: geodes_mined + geode_robots,
-                        });
-                    }
-                    // we have already simulated waiting
-                    if !can_build {
-                        have_waited = true;
-                    }
+                    // add state to stack
+                    stack.push(SimulationState {
+                        resources: new_resources,
+                        robots: new_robots,
+                        time: time + max_wait_time + 1,
+                        geode_robots: new_geode_robots,
+                        geodes_mined: geodes_mined + geode_robots * (max_wait_time + 1),
+                    });
                 }
+                // simulate how many geodes we'd mine if we kept mining with current number of
+                // geode robots
+                max_geodes_mined = max(max_geodes_mined, geodes_mined + geode_robots * (end_time - time));
             }
         }
     }
