@@ -4,6 +4,7 @@ use crate::days::util;
 
 pub fn main() {
     part1();
+    part2();
 }
 
 #[derive(Debug)]
@@ -28,16 +29,39 @@ fn part1() {
         // cost is in the form [ore, clay, obsidian]
         // for each of the robot types [ore, clay, obsidian, geode]
         let robot_costs = parse_blueprint(line);
-        let max_geodes_mined = mine_geodes(robot_costs);
+        let max_geodes_mined = mine_geodes(robot_costs, 24);
         quality_sum += (i as u32 + 1) * max_geodes_mined;
     }
     println!("Sum of quality levels: {}", quality_sum);
 }
 
+fn part2() {
+    let reader = util::get_day_reader(19);
+    let mut geode_prod = 1;
+    for (i, line) in reader.lines().enumerate() {
+        if i >= 3 {
+            break;
+        }
+        let line = line.unwrap();
+        let robot_costs = parse_blueprint(line);
+        let max_geodes_mined = mine_geodes(robot_costs, 32);
+        geode_prod *= max_geodes_mined;
+    }
+    println!("Product of max geodes mined: {}", geode_prod);
+}
+
 // Returns: maximum number of geodes that can be mined with these robot costs in 24 minutes
-fn mine_geodes(costs: [[u32; 3]; 4]) -> u32 {
-    let end_time = 24;
+fn mine_geodes(costs: [[u32; 3]; 4], end_time: u32) -> u32 {
     let mut max_geodes_mined = 0;
+    // figure out how many of each type of robot we should build
+    // we should never build more of a type of robot if building more of it won't speed up
+    // production by producing more of a limiting resource
+    let mut max_robots = [0; 3];
+    for i in 0..costs.len() {
+        for j in 0..costs[i].len() {
+            max_robots[j] = max(max_robots[j], costs[i][j]);
+        }
+    }
     // simulate possibilities with DFS over a sequence of robot-building decisions
     let mut stack: Vec<SimulationState> = Vec::new();
     stack.push(
@@ -54,6 +78,11 @@ fn mine_geodes(costs: [[u32; 3]; 4]) -> u32 {
             SimulationState { resources, robots, time, geode_robots, geodes_mined } => {
                 // try to build each type of robot
                 for i in 0..costs.len() {
+                    // don't build robot if it won't produce a limiting resource
+                    // no max on geode robots
+                    if i < robots.len() && robots[i] == max_robots[i] {
+                        continue;
+                    }
                     let cost = costs[i];
                     // check we have enough resources to build the robot
                     // figure out how long we need to wait to gather resources to build the bot
