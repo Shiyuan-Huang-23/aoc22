@@ -21,7 +21,7 @@ struct SimulationState {
 }
 
 fn part1() {
-    let reader = util::get_file_reader("short19.txt");
+    let reader = util::get_day_reader(19);
     let mut quality_sum = 0;
     for (i, line) in reader.lines().enumerate() {
         let line = line.unwrap();
@@ -29,7 +29,6 @@ fn part1() {
         // for each of the robot types [ore, clay, obsidian, geode]
         let robot_costs = parse_blueprint(line);
         let max_geodes_mined = mine_geodes(robot_costs);
-        println!("Max geodes mined using blueprint {}: {}", i + 1, max_geodes_mined);
         quality_sum += (i as u32 + 1) * max_geodes_mined;
     }
     println!("Sum of quality levels: {}", quality_sum);
@@ -39,7 +38,7 @@ fn part1() {
 fn mine_geodes(costs: [[u32; 3]; 4]) -> u32 {
     let end_time = 24;
     let mut max_geodes_mined = 0;
-    // simulate robot-building decisions
+    // simulate possibilities with DFS over a sequence of robot-building decisions
     let mut stack: Vec<SimulationState> = Vec::new();
     stack.push(
         SimulationState {
@@ -64,32 +63,34 @@ fn mine_geodes(costs: [[u32; 3]; 4]) -> u32 {
                         if resources[j] < cost[j] {
                             if robots[j] > 0 {
                                 // cost[j] - resources[j] is how much more of a resource we need
-                                // + 1 accounts for the fact that we'll need to wait to gather resources during this minute as well
-                                max_wait_time = max(max_wait_time, (cost[j] - resources[j])/robots[j] + 1);
+                                // the - 1 and + 1 makes sure we wait for the appropriate amount of time
+                                // the + 1 makes sure we always wait for at least 1 minute
+                                // the - 1 makes sure we don't wait longer than we need to due to integer division
+                                // e.g. if we need 3 ore and we have 3 ore robots, we only wait 1 minute, not 2
+                                max_wait_time = max(max_wait_time, (cost[j] - resources[j] - 1)/robots[j] + 1);
                             } else {
                                 // we currently have no robots gathering this resource
-                                // infeasible to build this robot
+                                // infeasible to build this robot by just waiting
                                 max_wait_time = end_time;
                             }
                         }
                     }
-                    // won't be able to build robot in time
-                    if time + max_wait_time >= end_time {
+                    // won't be able to build robot in time or
+                    // built robot won't get a chance to mine anything
+                    if time + max_wait_time + 1 >= end_time {
                         continue;
                     }
                     let mut new_resources = resources;
                     // gather resources with existing robots
                     for j in 0..resources.len() {
-                        // the +1 is because we're simulating until the end of the minute in which
+                        // the + 1 is because we're simulating until the end of the minute in which
                         // the chosen robot is built
                         new_resources[j] += robots[j] * (max_wait_time + 1);
+                        // we also spend resources to build robot
+                        new_resources[j] -= cost[j];
                     }
                     let mut new_robots = robots;
                     let mut new_geode_robots = geode_robots;
-                    // spend resources to build robot
-                    for j in 0..resources.len() {
-                        new_resources[j] -= cost[j];
-                    }
                     // robot is built
                     if i < robots.len() {
                         new_robots[i] += 1;
