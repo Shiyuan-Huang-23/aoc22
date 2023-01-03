@@ -69,7 +69,7 @@ fn decimal_to_snafu(n: i64) -> String {
                         else if multiplier == -1 { "-".to_string() }
                         else { "=".to_string() }
                 );
-                acc += (multiplier * place);
+                acc += multiplier * place;
                 break;
             }
         }

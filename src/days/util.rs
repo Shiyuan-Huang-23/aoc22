@@ -6,7 +6,7 @@ pub fn get_day_reader(day: i32) -> BufReader<File> {
     return BufReader::new(file);
 }
 
-pub fn get_file_reader(filename: &str) -> BufReader<File> {
+pub fn _get_file_reader(filename: &str) -> BufReader<File> {
     let file = File::open(filename).unwrap();
     return BufReader::new(file);
 }
