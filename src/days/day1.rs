@@ -1,5 +1,6 @@
-use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::cmp::max;
+use std::io::BufRead;
+use crate::days::util;
 
 pub fn main() {
     part1();
@@ -7,59 +8,44 @@ pub fn main() {
 }
 
 fn part1() {
-    // set up input
-    let file = File::open("inputs/day1.txt").unwrap();
-    let reader = BufReader::new(file);
-
-    // initialize variables
-    let mut max_calories = 0;
-    let mut curr_calories = 0;
-    let mut max_index = 0;
-    let mut curr_index = 0;
-
-    // process input
-    for line in reader.lines() {
-        let line = line.unwrap();
-        if line != "" {
-            let calories: i32 = line.parse().unwrap();
-            curr_calories += calories;
-        } else {
-            if curr_calories > max_calories {
-                max_calories = curr_calories;
-                max_index = curr_index;
-            }
-            curr_calories = 0;
-            curr_index += 1;
-        }
-    }
-    // handle last elf
-    if curr_calories > max_calories {
-        max_calories = curr_calories;
-        max_index = curr_index;
-    }
-    println!("Elf {} had {} calories.", max_index + 1, max_calories);
+    let max_calories =
+        parse_calories()
+            .iter()
+            .fold(0, |acc, c| max(acc, *c));
+    println!("Maximum calories: {}", max_calories);
 }
 
 fn part2() {
-    let file = File::open("inputs/day1.txt").unwrap();
-    let reader = BufReader::new(file);
-    let mut top_calories : Vec<i32> = vec![0, 0, 0, 0];
-    let mut curr_calories = 0;
+    let top_three_calories =
+        parse_calories()
+            .iter()
+            .fold(vec![0, 0, 0, 0], |mut acc, c|
+                {
+                    if *c >= acc[1] {
+                        acc[0] = *c;
+                        acc.sort();
+                        acc[0] = 0;
+                    }
+                    acc
+                },
+            );
+    let top_calories_sum: u32 = top_three_calories.iter().sum();
+    println!("Sum of top 3 calories: {}", top_calories_sum);
+}
 
-    for line in reader.lines() {
-        let line = line.unwrap();
-        if line != "" {
-            let calories: i32 = line.parse().unwrap();
-            curr_calories += calories;
+// Returns: total number of calories carried by each elf
+fn parse_calories() -> Vec<u32> {
+    let reader = util::get_day_reader(1);
+    let snacks: Vec<String> = reader.lines().map(|x| x.unwrap()).collect();
+    let mut calories: Vec<u32> = vec![0];
+    let mut last_index = 0;
+    for snack in snacks {
+        if !snack.is_empty() {
+            calories[last_index] += snack.parse::<u32>().unwrap();
         } else {
-            top_calories[0] = curr_calories;
-            top_calories.sort();
-            curr_calories = 0;
+            calories.push(0);
+            last_index += 1;
         }
     }
-    // handle last elf
-    top_calories[0] = curr_calories;
-    top_calories.sort();
-
-    println!("The 3 elves are carrying {} calories.", top_calories[1..].iter().sum::<i32>());
+    return calories;
 }
